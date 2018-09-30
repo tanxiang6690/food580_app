@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+		<script type="text/javascript">
+			document.addEventListener('plusready', function() {
+			    var webview = plus.webview.currentWebview();
+			    plus.key.addEventListener('backbutton', function() {
+			        webview.canBack(function(e) {
+			            if(e.canBack) {
+			                webview.back();
+			            } else {
+			                webview.close(); //hide,quit
+			                //plus.runtime.quit();
+			            }
+			        })
+			    });
+			});
+		</script>
+	</head>
+
+	<body>
+		<div class="warpMain">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="info">
+						<div class="p_top">
+							<div class="p_header">
+								<img class="pho" src="../images/defult.png">
+								<a class="btn"></a>
+							</div>
+							<div class="p_complete_state hd">
+								<div class="list">
+									<span class="progressing">0</span>
+									<p>进行中任务</p>
+								</div>
+								<div class="list">
+									<span class="progressed">0</span>
+									<p>完成任务总数</p>
+								</div>
+								<b class="line"></b>
+							</div>
+						</div>
+						<div class="p_cont_list">
+							<ul>
+								<li onclick="window.location.href='confirm.html'">
+									<a>
+										<i class="iconfont icon-rili"></i> 
+										<rem>待确认任务</rem>
+										<span>0</span>
+									</a>
+									<i class="icon iconfont icon-jiantou"></i>
+								</li>
+								<li onclick="window.location.href='audit.html'">
+									<a>
+										<i class="iconfont icon-shenheguanli"></i> 
+										<rem>审核中</rem>
+										<span>0</span>
+									</a>
+									<i class="icon iconfont icon-jiantou"></i>
+								</li>
+								<li onclick="window.location.href='audit.html?isComplete=isComplete'">
+									<a>
+										<i class="iconfont icon-shenhebutongguo"></i> 
+										<rem>未通过审核</rem>
+										<span>0</span>
+									</a>
+									<i class="icon iconfont icon-jiantou"></i>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footer hd">
+				<ul>
+					<li onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li class="hover" onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script type="text/javascript">
+			// 获取缓存用户id
+			var _userId = getCache('userId');
+			
+			// 获取用户信息
+			getDate(_userId);
+			function getDate(userId){
+				$.ajax({
+					type: 'post',
+					type:"post",
+					url:api.development + 'me.json',
+					dataType: "json",
+					data:{userId: userId},
+					success: function(res){
+						$('.jiazai').addClass('hide');
+						
+						//用户姓名
+						$('.p_header a').text(res.fullName);
+						//进行中任务
+						$('.p_complete_state span:first').text(res.processing);
+						//完成任务总数
+						$('.p_complete_state span:eq(1)').text(res.missionAccomplished);
+						
+						var taskList = $('.p_cont_list a');
+						//待确认任务
+						taskList.eq(0).children('span').text(res.confirmed);
+						//审核中
+						taskList.eq(1).children('span').text(res.checkTask);
+						//未通过审核
+						taskList.eq(2).children('span').text(res.notPass);
+					},
+					error: function(err){
+						console.log(err);
+					}
+				})
+			}
+		</script>
+	</body>
+
+</html>

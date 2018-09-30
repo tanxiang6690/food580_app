@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<link rel="stylesheet" href="css/base.css">
+		<link rel="stylesheet" href="css/theme_muyuan.css">
+		<link rel="stylesheet" href="css/iconfonts.css">
+		<link rel="stylesheet" href="css/common.css">
+		<script src="js/base.js"></script>
+	</head>
+
+	<body class="white-bg">
+		<div class="warpMain login_bg">
+			<div class="tbWrap" id="topWrap">
+				<div class="scroll">
+					<form class="form-signin" id="adminForm" action="http://www.food580.cn:8888/admin/login.json" autocomplete="off" method="post">
+						<!-- food580 -->
+						<div class="login_one">
+							<img src="images/logo_580.png">
+							<h4>食安过程管理控制系统</h4>
+						</div>
+						<div class="login_input">
+							<i class="iconfont icon-yonghu "></i>
+							<input class="text" type="text" name="loginName" placeholder="请输入您的工号">
+						</div>
+						<div class="login_input">
+							<i class="iconfont icon-mima"></i>
+							<input class="text" type="password" name="password" placeholder="请输入您的密码">
+						</div>
+						<div class="login_btn">
+							<!--按钮加上disable 为禁用状态，去掉disable为可用状态-->
+							<button class="btn btn-login">登录</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery.form.min.js"></script>
+		<script src="js/iscroll.js"></script>
+		<script src="js/layer.js"></script>
+		<script src="js/main.js"></script>
+		<script type="text/javascript">
+			// 登录
+			$('#adminForm').ajaxForm({
+				dataType: 'json',
+				success: function(data) {
+					// 将用户id缓存到本机
+					setCache('userId', data.userId);
+
+					if(data.result) {
+						location.href = "proch5/task.html";
+					} else {
+						//layer.msg(data.msg);
+						layer.open({
+							className: 'exitMask',
+							content: '工号/密码输入错误，请重试！',
+							btn: ['确定'],
+							yes: function(index) {
+								layer.closeAll();
+								window.location.reload();
+							}
+						});
+					}
+				}
+			});
+		</script>
+	</body>
+
+</html>

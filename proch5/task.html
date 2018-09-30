@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+		<script type="text/javascript">
+			document.addEventListener('plusready', function() {
+			    var webview = plus.webview.currentWebview();
+			    plus.key.addEventListener('backbutton', function() {
+			        webview.canBack(function(e) {
+			            if(e.canBack) {
+			                webview.back();
+			            } else {
+			                webview.close(); //hide,quit
+			                //plus.runtime.quit();
+			            }
+			        })
+			    });
+			});
+		</script>
+	</head>
+
+	<body>
+		<div class="warpMain">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="c_title ls_title">
+						<i class="icon iconfont icon-zidingyicaidan"></i>
+						<span>我的核查任务</span>
+					</div>
+					<div class="ct_tab">
+						<ul class="hd">
+							<li class="hover">进行中</li>
+							<li>已完成</li>
+						</ul>
+					</div>
+					<div class="ct_list dom">
+						<ul></ul>
+					</div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footer hd">
+				<ul>
+					<li class="hover" onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif"/></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script type="text/javascript">
+			$('ul.hd li').click(function(){
+				$(this).addClass('hover').siblings().removeClass('hover');
+				var _index = $(this).index();
+				if (_index == 0) {
+					_index = 1;
+				} else {
+					_index = 6;
+				}
+				getList(_index);
+			})
+			
+			//用户id
+			var userId = getCache('userId');
+			
+			// 获取数据
+			getList(1);
+			function getList(num){
+				$('.jiazai').removeClass('hide');
+				$('.dom ul').html('');
+				$.ajax({
+					type:"post",
+					url:api.development + 'getTaskList.json',
+					dataType: "json",
+					data:{status: num, userId: userId},
+					success: function(res){
+						var _list = res.list,
+							_html = '';
+						_list.forEach(function(item){
+							_html += 
+								'<li onclick="pageLink(' + item.id + ', ' + item.taskId + ', ' + num + ')">' +
+									'<h2 class="ellipsis mr">' + item.checkName + '</h2>' +
+									'<p class="addr ellipsis mr"><i class="iconfont icon-weizhi"></i>' +item.regionName + '</p>' +
+									'<div class="subright">' +
+										'<span>' + item.finishedTimesCount + '/' + item.itemsCount + '</span>' +
+										'<div class="progress">' +
+											'<span style="width:' + item.percentage + '"></span>' + 
+										'</div>' + 
+										'<span>' + item.completeTime.split(' ')[0] + '</span>' + 
+									'</div>' + 
+									'<i class="icon iconfont icon-jiantou"></i>' +
+								'</li>';
+						})
+						$('.dom ul').append(_html);
+						$('.jiazai').addClass('hide');
+					}, 
+					error: function(err){
+						console.log(err)
+					}
+				});
+			}
+			
+			// 页面跳转
+			function pageLink(id, taskId, num){
+				if (num == 1) {					
+					window.location.href='sort.html?id='+id+'&taskId='+taskId;
+				} else {
+					window.location.href='result.html?taskId='+taskId;
+				}
+			}
+		</script>
+	</body>
+
+</html>

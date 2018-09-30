@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+		<script type="text/javascript">
+			document.addEventListener('plusready', function() {
+			    var webview = plus.webview.currentWebview();
+			    plus.key.addEventListener('backbutton', function() {
+			        webview.canBack(function(e) {
+			            if(e.canBack) {
+			                webview.back();
+			            } else {
+			                webview.close(); //hide,quit
+			                //plus.runtime.quit();
+			            }
+			        })
+			    });
+			});
+		</script>
+	</head>
+
+	<body>
+		<div class="warpMain">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="ls_title"></div>
+					<div class="lsl_list">
+						<ul style="margin-bottom: 1rem;"></ul>
+					</div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footer hd">
+				<ul>
+					<li class="hover" onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script type="text/javascript">
+			function listSlide(_this){
+				_this.children('.sub_list').slideToggle();
+			}
+			
+			// 第一级id
+			var _id = parseInt(getUrlParam('id'))
+			// 本次核查任务id(此条数据id)
+			var _taskId = parseInt(getUrlParam('taskId'));
+			getList(_id, _taskId)
+			function getList(id, taskId){
+				$.ajax({
+					type:"post",
+					url:api.development + 'getLevelTwoInfo.json',
+					dataType: "json",
+					data:{id: id, taskId: taskId},
+					success: function(res){
+						$('.jiazai').addClass('hide');
+						
+						//页面顶部
+						var resHead = res.checkList,						
+							resHeadHtml = 
+							'<div class="pr title">' +
+								'<h2 class="ellipsis">' +resHead.code + '.' + resHead.name + '</h2>' +
+								'<span class="num">' + resHead.finishSum + '/' + resHead.quantity + '</span>' +
+							'</div>' +
+							'<div class="pr subtitle">' +
+								'<p class="ellipsis">' + resHead.checklistName + '</p>' +
+							'</div>';
+						$('.ls_title').html(resHeadHtml);
+						
+						//页面主体
+						var resBody = res.list,
+							resBodyHtml = '';
+						resBody.forEach(function(items){
+							var secondBodyHtml = items.procChecklistItems;
+							var dd = '';
+							if (secondBodyHtml.length > 0) {								
+								secondBodyHtml.forEach(function(item){
+									var icons = '';
+									if (item.level == 1) {										
+										icons = '<i class="icon iconfont icon-danxuankuang-copy"></i>';
+									} else {
+										icons = '<i class="icon iconfont icon-danxuankuang"></i>';
+									}
+									dd += 
+										'<dd onclick="confirmTask(' + item.id + ', ' + taskId + ')">' +
+											'<b class="font-gray">' + item.code + '</b>' +
+											'<h5 class="text">' + item.name + '</h5>' + icons +
+										'</dd>';
+								})
+								resBodyHtml += 
+									'<li onclick="listSlide($(this))">' +
+										'<div class="title ellipsis">' +
+											'<b>' + items.code + '</b>' +
+											'<span>' + items.name + '</span>' +
+											'<i class="icon iconfont icon-jiantou"></i>' +
+										'</div>' +
+										'<dl class="sub_list hide">' + dd + '</dl>' +
+									'</li>';
+							} else {
+								var icon = ''
+								if (items.level == 1) {
+									icon = '<i class="icon iconfont icon-danxuankuang-copy"></i>';
+								} else {
+									icon = '<i class="icon iconfont icon-danxuankuang"></i>';
+								}
+								resBodyHtml += 
+									'<li onclick="confirmTask(' + items.id + ', ' + taskId + ')">' +
+										'<div class="title ellipsis">' +
+											'<b>' + items.code + '</b>' +
+											'<span>' + items.name + '</span>' + icon +
+										'</div>' +
+									'</li>';
+							}
+						})
+						$('.lsl_list ul').html(resBodyHtml)
+					},
+					error: function(err){
+						console.log(err);
+					}
+				})
+			}
+			
+			function confirmTask(id, taskId){
+				$.ajax({
+					type:"post",
+					url:api.development + 'score.json',
+					dataType: "json",
+					data:{id: id, taskId: taskId},
+					success: function(res){
+						window.location.href='mark.html?nextId='+res.nextId+'&previousId='+res.previousId+'&taskItemId='+res.taskItemId+'&id='+res.id+'&taskId='+res.taskId+'&checklistId='+res.checklistId;
+					},
+					error: function(err){
+						console.log(err);
+					}
+				});
+			}
+		</script>
+	</body>
+
+</html>

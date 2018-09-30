@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+	</head>
+
+	<body>
+		<div class="warpMain">
+			<input type="hidden" name="taskId" value="${taskId!}">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="p_top">
+						<div class="p_header">
+							<a class="btn">本次核查得分</a>
+							<div class="circle">
+								<canvas class="loader" width="120" height="120"></canvas>
+							</div>
+							<p>
+								<span>完成时间：</span>
+								<span class="time"></span>
+							</p>
+						</div>
+						<div class="p_complete_state hd">
+							<div class="list">
+								<span>达标率：</span>
+								<span class="dabiao">0</span>
+							</div>
+							<div class="list">
+								<span>整体评价：</span>
+								<span class="pinjia">0</span>
+							</div>
+							<b class="line"></b>
+						</div>
+					</div>
+					<div class="r_list hd">
+						<ul>
+							<li>
+								<p>总计</p>
+								<span class="total">0</span>
+								<i class="line"></i>
+							</li>
+							<li>
+								<p>符合</p>
+								<span class="totaly">0</span>
+								<i class="line"></i>
+							</li>
+							<li>
+								<p>基本符合</p>
+								<span class="totalm">0</span>
+								<i class="line"></i>
+							</li>
+							<li>
+								<p>不符合</p>
+								<span class="isCompliance">0</span>
+								<i class="line"></i>
+							</li>
+							<li>
+								<p>不适用</p>
+								<span class="totalna">0</span>
+							</li>
+						</ul>
+					</div>
+					<div class="p_cont_list p_set">
+						<ul>
+							<li onclick="confirmTask()">
+								<a>
+									<i class="iconfont icon-weidabiao"></i>
+									<rem>查看未达标项</rem>
+									<span class="isCompliance">0</span>
+								</a>
+								<i class="icon iconfont icon-jiantou"></i>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footer hd">
+				<ul>
+					<li class="hover" onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script src="../js/jquery.classyloader.min.js"></script>
+		<script type="text/javascript">
+			// 获取任务id
+			var _taskId = getUrlParam('taskId');
+			// 获取数据
+			getDate(_taskId);
+			function getDate(taskId){
+				$.ajax({
+					type:"post",
+					url:api.development + 'finish.json',
+					dataType: "json",
+					data:{taskId: taskId},
+					success: function(res){
+						$('.jiazai').addClass('hide');
+						var top = res.ProcTaskVo,
+							btm = res.quantity;
+						//完成时间
+						$('.p_header span.time').text(top.completeTime);
+						//达标率
+						$('.p_complete_state span.dabiao').text(top.coincidenceDegree);
+						//评价
+						$('.p_complete_state span.dabiao span.pinjia').text(top.grade);
+						//zongji
+						$('.r_list li span.total').text(btm.total);
+						//符合
+						$('.r_list li span.totaly').text(btm.totaly);
+						//基本符合
+						$('.r_list li span.totalm').text(btm.totalm);
+						//不符合
+						$('.r_list li span.isCompliance').text(btm.totaln);
+						//不适用
+						$('.r_list li span.totalna').text(btm.totalna);
+						//未达标
+						$('.p_cont_list li span.isCompliance').text(btm.totaln);
+						//canvas
+						$('.loader').ClassyLoader({
+				            percentage: top.score,
+				            speed: 20,
+				            fontSize: '36px',
+				            fontColor:'#fff',
+				            width:120,
+				            height:120,
+				            diameter: 50,
+				            lineColor: '#47f3f1',
+				            remainingLineColor: '#638cd3',
+				            lineWidth: 8
+				        });
+					},
+					error: function(err){
+						console.log(err);
+					}
+				})
+			}
+			
+			//查看未达标项
+			function confirmTask(){
+				window.location.href = 'unqualifieditem.html?taskId=' + _taskId;
+			}
+		</script>
+	</body>
+
+</html>

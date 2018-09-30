@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+		<script type="text/javascript">
+			document.addEventListener('plusready', function() {
+			    var webview = plus.webview.currentWebview();
+			    plus.key.addEventListener('backbutton', function() {
+			        webview.canBack(function(e) {
+			            if(e.canBack) {
+			                webview.back();
+			            } else {
+			                webview.close(); //hide,quit
+			                //plus.runtime.quit();
+			            }
+			        })
+			    });
+			});
+		</script>
+	</head>
+
+	<body class="bg_white">
+		<div class="warpMain">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="cls"></div>
+					<div class="cls_list">
+						<div class="checklist">
+							<ul class="radioBox hd"></ul>
+						</div>
+						<div class="title tl"><b>描述说明</b></div>
+						<div class="comment">
+							<div class="discribe">
+								<textarea placeholder="请输入核查表情况信息" id="comment"></textarea>
+							</div>
+						</div>
+						<div class="title"><b>拍照记录</b></div>
+						<div class="imgList hd">
+							<div class="imgboxList"></div>
+							<div class="addImgBtn">
+								<i class="iconfont icon-xiangji"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footerbtns hd">
+				<!--按钮去掉disable 类为激活状态-->
+				<a class="btn btn-blue " id="previous">上一步</a>
+				<a class="btn btn-green disable" id="next">下一步</a>
+				<a class="btn btn-gray" id="back">取消</a>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<div class="bigImgBox">
+			<div class="bigImgs"></div>
+			<div class="delImg"><i class="iconfont icon-shanchu"></i></div>
+			<div class="rotateImg"><i class="iconfont icon-xuanzhuan"></i></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+		<script src="../js/ajaxfileupload.js"></script>
+		<script type="text/javascript">
+			// 解释说明的显示与隐藏事件
+			function silde_up(_this) {
+				_this.find('.tipscont').slideToggle();
+			}
+
+			//获取请求接口所用的参数
+			var nextId = getUrlParam('nextId'), //下一步id
+				previousId = getUrlParam('previousId'), //上一步id
+				taskItemId = getUrlParam('taskItemId'), //打分描述对应的第二级id
+				id = getUrlParam('id'), //打分项id
+				taskId = getUrlParam('taskId'), //核查任务id
+				checklistId = getUrlParam('checklistId'); //核查表id
+
+			// 获取数据
+			getDate();
+
+			function getDate() {
+				$.ajax({
+					type: "post",
+					url: api.development + 'getScore.json',
+					dataType: "json",
+					data: {
+						id: id,
+						taskId: taskId,
+						taskItemId: taskItemId
+					},
+					success: function(res) {
+						$('.jiazai').addClass('hide');
+
+						//顶部+释义
+						var title = res.pcli;
+						var intr = '<div class="tipscont hide"><div class="tips">' + title.memo + '</div></div>';
+						var titleHtml =
+							'<div class="ls_title">' +
+								'<b class="font-gray">' + title.code + '</b>' +
+								'<h5 class="text">' + title.name + '</h5>' +
+							'</div>' +
+							'<div class="cls_list">' +
+								'<div class="title" onclick="silde_up($(this))">' +
+									'<i class="iconfont icon icon-wenhao"></i>' +
+									'<b>查看释义</b>' + 
+								'</div>' +
+							'</div>';
+						if(title.memo != ''){
+							var titleHtml =
+								'<div class="ls_title">' +
+									'<b class="font-gray">' + title.code + '</b>' +
+									'<h5 class="text">' + title.name + '</h5>' +
+								'</div>' +
+								'<div class="cls_list">' +
+									'<div class="title" onclick="silde_up($(this))">' +
+										'<i class="iconfont icon icon-wenhao"></i>' +
+										'<b>查看释义</b>' + intr +
+									'</div>' +
+								'</div>';
+						}
+						$('.cls').html(titleHtml);
+
+						//四个打分项
+						var rule = res.ruleList,
+							ruleHtml = '';
+						rule.forEach(function(i) {
+							var label = '<label class="radio-nor">' + i.name + '</label>';
+							if(i.level != null) {
+								label = '<label class="radio-nor radio-press">' + i.name + '</label>';
+							}
+							ruleHtml +=
+								'<li onclick="grade($(this))">' + label + '</li>';
+						})
+						$('.checklist ul').html(ruleHtml);
+
+						//描述说明
+						$('.discribe textarea').text(res.scoreInfo.comment);
+
+						//拍照记录
+						var photos = res.imageList,
+							photosHtml = '';
+						photos.forEach(function(i) {
+							photosHtml +=
+								'<div class="imgbox">' +
+								'<img src="' + api.imgUrl + i.url + '" data-id="' + i.id + '">' +
+								'</div>';
+						})
+						$('.imgboxList').html(photosHtml);
+					},
+					error: function(err) {
+						console.log(err);
+					}
+				})
+			}
+
+			//下一步同时也保存了当前页面的内容
+			$('#next').click(function() {
+				var comment = $('#comment').val();
+				if(nextId == "" || nextId == null || nextId == undefined || nextId == 'null') {
+					layer.open({
+						className: 'exitMask',
+						content: '这是最后一页',
+						btn: ['确定'],
+						yes: function(index) {
+							console.log(index)
+						}
+					});
+				} else {
+					$.ajax({
+						type: "post",
+						url: api.development + 'unfinish.json',
+						dataType: "json",
+						data: {
+							id: nextId,
+							taskId: taskId
+						},
+						success: function(res) {
+							window.location.href = 'unfinishedprojectmark.html?nextId=' + res.nextId + '&previousId=' + res.previousId + '&taskItemId=' + res.taskItemId + '&id=' + res.id + '&taskId=' + res.taskId + '&checklistId=' + res.checklistId;
+						},
+						error: function(err) {
+							console.log(err);
+						}
+					});
+				}
+			});
+
+			//上一步
+			$('#previous').click(function() {
+				var comment = $('#comment').val();
+				if(previousId == "" || previousId == null || previousId == undefined || previousId == 'null') {
+					layer.open({
+						className: 'exitMask',
+						content: '这是第一页',
+						btn: ['确定'],
+						yes: function(index) {
+							console.log(index)
+						}
+					});
+				} else {
+					$.ajax({
+						type: "post",
+						url: api.development + 'unfinish.json',
+						dataType: "json",
+						data: {
+							id: previousId,
+							taskId: taskId
+						},
+						success: function(res) {
+							window.location.href = 'unfinishedprojectmark.html?nextId=' + res.nextId + '&previousId=' + res.previousId + '&taskItemId=' + res.taskItemId + '&id=' + res.id + '&taskId=' + res.taskId + '&checklistId=' + res.checklistId;
+						},
+						error: function(err) {
+							console.log(err);
+						}
+					});
+				}
+			})
+			
+			//取消
+			$('#back').click(function(){
+				window.location.href='unqualifieditem.html?taskId=' + taskId
+			})
+		</script>
+	</body>
+
+</html>

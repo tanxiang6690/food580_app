@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+	</head>
+
+	<body>
+		<div class="warpMain">
+			<input type="hidden" name="taskId" value="${taskId!}">
+			<input type="hidden" name="checklistid" value="${checklistid!}">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="c_title ls_title">
+						<i class="icon iconfont icon-zidingyicaidan"></i>
+						<span>未通过审核任务</span>
+					</div>
+					<div class="ls_title ucl_title">
+						<div class="pr title">
+							<h2>审核信息</h2>
+						</div>
+						<div class="pr subtitle">
+							<p class="addr ellipsis mr">
+								<i class="iconfont icon-weizhi"></i>
+								<rem>驻马店 正阳 正阳十五场</rem>
+							</p>
+							<span class="font-darkblue time">
+								<rem>发布时间：</rem>
+								<b class="blue"></b>
+							</span>
+						</div>
+						<div class="pr audit_info">
+							<p class="ellipsis mr_2 font-darkblue">
+								<span>审核人：</span>
+								<b class="blue"></b>
+								<span style="margin-left: 10px;">审核结果：</span>
+								<b class="blue"></b>
+							</p>
+							<span class="font-darkblue time">
+								<rem>审核时间：</rem>
+								<b class="blue"></b>
+							</span>
+						</div>
+						<div class="audit_explain">
+							<h2 class="title">审核说明</h2>
+							<div class="font-darkblue">再来一次哈哈</div>
+						</div>
+					</div>
+					<div class="ucl_list">
+						<div class="u_title">待完善检查项</div>
+						<dl class="sub_list"></dl>
+					</div>
+					<div class="cls_complete_state"></div>
+				</div>
+			</div>
+			<div class="footer hd">
+				<ul>
+					<li onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li class="hover" onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script>
+			//获取任务id
+			var _taskId = getUrlParam('taskId');
+
+			//获取数据
+			getDate(_taskId);
+
+			function getDate(taskId) {
+				$.ajax({
+					type: "post",
+					url: api.development + 'getNopassInfo.json',
+					dataType: "json",
+					data: {
+						taskId: taskId
+					},
+					success: function(res) {
+						$('.jiazai').addClass('hide');
+						var top = res.taskVo, //顶部信息
+							mid = res.nopassPerfectList, //中间信息
+							btm = res.total, //底部信息
+							midHtml = '',
+							btmHtml = 
+								'<a class="text">全部完成，请提交审核</a>' +
+								'<button onclick="finish()" class="btn btn-blue">完成提交</button>';
+
+						$('.addr rem').text(top.regionName); //地址
+						$('.subtitle b').text(top.createDate); //发布时间
+						$('.audit_info b.blue:eq(0)').text(top.districtChiefName); //审核人
+						$('.audit_info b.blue:eq(1)').text(top.rivewState); //审核结果
+						$('.audit_info b.blue:eq(2)').text(top.completeTime); //审核时间
+						$('.audit_explain .font-darkblue').text(top.completeTime); //审核说明
+
+						mid.forEach(function(i) {
+							var icon = '<i class="icon iconfont icon-danxuankuang"></i>';
+							if(i.perfectStatus == true) {
+								icon = '<i class="icon iconfont icon-danxuankuang-copy"></i>';
+							}
+							midHtml +=
+								'<dd onclick="confirmTask('+i.id+')">' +
+								'<b class="font-gray">' + i.code + '</b>' +
+								'<h5 class="text">' + i.name + '</h5>' + icon +
+								'</dd>';
+							$('.ucl_list dl').html(midHtml);
+						})
+
+						if(btm.total != '0') {
+							btmHtml =
+								'<a class="text">' +
+									'<span>剩余</span>' +
+									'<span class="font-blue">' + btm.total + '</span>' +
+									'<span>项未完善</span>' +
+								'</a>' +
+								'<button class="btn btn-blue disable">完成提交</button>';
+						}
+						$('.cls_complete_state').html(btmHtml);
+					},
+					error: function(err) {
+						console.log(err);
+					}
+				})
+			}
+			
+			function confirmTask(id){
+				$.ajax({
+					type: "post",
+					url: api.development + 'perfectedmark.json',
+					dataType: "json",
+					data: {
+						taskId: _taskId,
+						id: id
+					},
+					success: function(res){
+						window.location.href = 'unfinishedprojectmark.html?nextId=' + res.nextId + '&previousId=' + res.previousId + '&taskItemId=' + res.taskItemId + '&id=' + res.id + '&taskId=' + res.taskId + '&checklistId=' + res.checklistId;
+					},
+					error: function(err){
+						console.log(err);
+					}
+				});
+			}
+			
+			function finish(){
+			 	layer.open({
+		            className: 'exitMask',
+		            content: '确认提交吗？',
+		            btn: ['确定','取消'],
+		            yes: function(index){
+		            	$.ajax({
+		            		type:"post",
+							url:api.development + 'result.json',
+							dataType: "json",
+							data:{taskId: _taskId},
+							success: function(res){
+								window.location.href='audit.html';
+							},
+							error: function(err){
+								console.log(err)
+							}
+		            	})
+		            }
+		        });  
+	 		}
+		</script>
+	</body>
+
+</html>

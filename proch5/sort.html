@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalabel=0" name="viewport">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="format-detection" content="telephone=yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<link rel="shortcut icon" type="images/x-icon" sizes="16x16" href="images/favicon.ico">
+		<title></title>
+		<link rel="stylesheet" href="../css/base.css">
+		<link rel="stylesheet" href="../css/theme_muyuan.css">
+		<link rel="stylesheet" href="../css/iconfonts.css">
+		<link rel="stylesheet" href="../css/common.css">
+		<script src="../js/base.js"></script>
+		<script type="text/javascript">
+			document.addEventListener('plusready', function() {
+			    var webview = plus.webview.currentWebview();
+			    plus.key.addEventListener('backbutton', function() {
+			        webview.canBack(function(e) {
+			            if(e.canBack) {
+			                webview.back();
+			            } else {
+			                webview.close(); //hide,quit
+			                //plus.runtime.quit();
+			            }
+			        })
+			    });
+			});
+		</script>
+	</head>
+	<body>
+		<div class="warpMain">
+			<div class="topWrap" id="topWrap">
+				<div class="scroll">
+					<div class="ls_title"></div>
+					<div class="ls_list">
+						<ul></ul>
+					</div>
+					<div class="cls_complete_state"></div>
+				</div>
+			</div>
+			<!--footer-->
+			<div class="footer hd">
+				<ul>
+					<li class="hover" onclick="window.location.href='task.html'">
+						<i class="icon iconfont icon-gongzuo"></i>
+						<span>工作区</span>
+					</li>
+					<li onclick="window.location.href='notice.html'">
+						<i class="icon iconfont icon-tongzhi"></i>
+						<span>通知</span>
+					</li>
+					<li onclick="window.location.href='me.html'">
+						<i class="icon iconfont icon-wode"></i>
+						<span>我的</span>
+					</li>
+				</ul>
+			</div>
+			<!--加载动画-->
+			<div class="jiazai"><img src="../images/loading.gif" /></div>
+		</div>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/jquery.form.min.js"></script>
+		<script src="../js/iscroll.js"></script>
+		<script src="../js/layer.js"></script>
+		<script src="../js/main.js"></script>
+		<script type="text/javascript">
+			// 核查表的id
+			var _id = parseInt(getUrlParam('id')); 
+			// 本次核查任务id(此条数据id)
+			var _taskId = parseInt(getUrlParam('taskId'));
+			
+			getList(_id, _taskId);
+			
+			function getList(id, taskId){
+				$.ajax({
+					type:"post",
+					url:api.development + 'getTaskInfoByTaskId.json',
+					dataType: "json",
+					data:{id: id, taskId: taskId},
+					success: function(res){
+						$('.jiazai').addClass('hide');
+						
+						// 页面头部
+						var resHead = res.vo,
+							resHeadHtml = 
+							'<div class="pr title">' + 
+								'<h2 class="ellipsis mr_2">' + resHead.checkName + '</h2>' +
+								'<span>' + resHead.finishedTimesCount +'/' + resHead.itemsCount + '</span>' +
+							'</div>' +
+							'<div class="pr subtitle">' +
+								'<p class="addr ellipsis mr"><i class="iconfont icon-weizhi"></i>' + resHead.regionName + '</p>' + 
+								'<span>' + resHead.completeTime + '</span>' +
+							'</div>';
+						$('.ls_title').html(resHeadHtml);
+						
+						// 页面主体
+						var	resBody = res.checkList,
+							resBodyHtml = '';
+						resBody.forEach(function(item, index){
+							resBodyHtml += 
+								'<li onclick="confirmTask(' + item.id + ')">' + 
+									'<h2 class="ellipsis"><b class="font-gray">' + (index + 1) + '</b>' + item.name + '</h2>' +
+									'<span class="num">' + item.total + '/' + item.quantity + '</span>' +
+									'<i class="icon iconfont icon-jiantou"></i>' +
+								'</li>';
+						})
+						$('.ls_list ul').html(resBodyHtml);
+						
+						// 压面底部
+						var resFoot = res.quantity,
+							btn = '<button class="btn btn-blue disable">完成提交</button>';
+						if (resFoot.quantity == '0') {
+							btn = '<button class="btn btn-blue" onclick="finish()">完成提交</button>'
+						}
+						var	resFootHtml = 
+							'<p class="text" onclick="toUnfinish()">' +
+								'<span>剩余</span>' +
+								'<span class="font-blue">' + resFoot.quantity + '</span>' +
+								'<span>项未完成，继续&gt;&gt;</span>' +
+							'</p>' + btn;
+						$('.cls_complete_state').html(resFootHtml);
+					},
+					error: function(err){
+						console.log(err);
+					}
+				});
+			}
+			
+			function confirmTask(id){
+				window.location.href = 'sublist.html?id=' + id +'&taskId=' + _taskId;
+			}
+			
+			//剩余未完成项
+			function toUnfinish(){
+				window.location.href='unfinish.html?taskId=' + _taskId;
+			}
+			
+			function finish(){
+			 	layer.open({
+		            className: 'exitMask',
+		            content: '确认提交吗？',
+		            btn: ['确定','取消'],
+		            yes: function(index){
+		            	$.ajax({
+		            		type:"post",
+							url:api.development + 'result.json',
+							dataType: "json",
+							data:{taskId: _taskId},
+							success: function(res){
+								window.location.href='result.html?taskId=' + _taskId;
+							},
+							error: function(err){
+								console.log(err)
+							}
+		            	})
+		            }
+		        });  
+	 		}
+		</script>
+	</body>
+</html>
